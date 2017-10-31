@@ -16,11 +16,36 @@ def XML_Extraction(XMLFILE):
     return f, exactIntegral
     
 def Gauss_Legendre_Data(n):
-    return
+    
+    X = [0 for _ in range(n)]
+    W = [0 for _ in range(n)]
+    
+    for i in range(1, n):
+        x0 = 1/2*(np.cos((2*i-1)*np.pi/(2*n+1)) + np.cos((2*i*np.pi)/(2*n+1)))
+        X[i] = Olver(n, x0)
+        l1 = Legendre_1(n, X[i])
+        W[i] = 2/((1-X[i]**2)*l1**2)
+    return X, W
     
 
 def Olver(n,x0):
-    pass
+    
+    TOL = 1e-10
+    x = x0
+    s = TOL+1
+
+    while (abs(s) >= TOL):   
+        l0, t = Legendre_0(n, x)
+        l1, t = Legendre_1(n, x)
+#        l2 = Legendre_2(n, x)
+                 
+#        s = np.float128(l0/l1 + l2*l0**2/(2*l1**3))
+        s = np.float128(l0/l1)
+        x = np.float128(x - s)
+        print(x)    
+        
+    return x
+    
 
 def Legendre_0(n,x):
     
@@ -40,26 +65,42 @@ def Legendre_0(n,x):
     return sum(res), res
 
 def Legendre_1(n,x):
-    res = Legendre_0(n, x)
+    total, res = Legendre_0(n, x)
     
     # Pick out the odd values from {0, 1, ... n-1}
-    indices = filter(lambda k: (k+n)%2==1, range(0, n-1))
+    #indices = filter(lambda k: (k+n)%2==1, range(0, n-1))
     
-    l1 = 0
-    for k in indices:
-        l1 += (2*k+1)*res[k]
-    return l1
+    l1res = [0 for k in range(n)]
+    
+    l1res[0] = 0
+    l1res[1] = 1
+#    
+#    for k in indices:
+#        l1 += (2*k+1)*res[k]
 
-def Legendre_2(n,x):
-    res = Legendre_0(n, x)
-    
-    # Pick out even values from {0, 1, ... n-2}
-    indices = filter(lambda k: (k+n)%2==0, range(0, n-2))
-    
-    l2 = 0
-    for k in indices:
-        l2 += (k+1/2)(n(n+1)-k(k+1))*res[k]
-    return l2
+    for i in range(1, n-2):
+        l1res[i+1] = (n+1)/(x**2-1)*(x*res[i]-res[i-1]) 
+
+    return sum(l1res), l1res
+
+#def Legendre_2(n,x):
+#    l1tot, l1res = Legendre_1(n, x)
+#    
+#    l2res = [0 for k in range(n)]
+#    
+#    l2res[0] = 0
+#    l2res[1] = 0
+##    
+##    for k in indices:
+##        l1 += (2*k+1)*res[k]
+#
+#    for i in range(1, n-2):
+#        l1res[i+1] = (n+1)/(x**2-1)*(x*res[i]-res[i-1]) 
+#
+#    return sum(l1res), l1res
+#
+#    
+#    return l2
 
 def Gauss_Legendre_Quadrature(n,G,f):
     return
@@ -69,10 +110,10 @@ def Return_Quadrature(XMLFILE,n):
 
     
 if __name__ == "__main__":
-    k = range(7, 10)
-    x = np.linspace(-1, 1, 100)
-    print(Legendre_0(5, 0.5))
+    
+    
+    print(Gauss_Legendre_Data(5))
         
-    print(np.polynomial.legendre.leggauss(5))
+    #print(np.polynomial.legendre.leggauss(5))
     
     
