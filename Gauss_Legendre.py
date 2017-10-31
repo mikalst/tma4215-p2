@@ -37,13 +37,29 @@ def Legendre_0(n,x):
     for i in range(1, n-1):
         res[i+1] = ( (2*i+1)*x*res[i] - i*res[i-1] )/(i+1)
         
-    return sum(res)
+    return sum(res), res
 
 def Legendre_1(n,x):
-    return
+    res = Legendre_0(n, x)
+    
+    # Pick out the odd values from {0, 1, ... n-1}
+    indices = filter(lambda k: (k+n)%2==1, range(0, n-1))
+    
+    l1 = 0
+    for k in indices:
+        l1 += (2*k+1)*res[k]
+    return l1
 
-def Legendre_2(n,x,L0,L1):
-    return
+def Legendre_2(n,x):
+    res = Legendre_0(n, x)
+    
+    # Pick out even values from {0, 1, ... n-2}
+    indices = filter(lambda k: (k+n)%2==0, range(0, n-2))
+    
+    l2 = 0
+    for k in indices:
+        l2 += (k+1/2)(n(n+1)-k(k+1))*res[k]
+    return l2
 
 def Gauss_Legendre_Quadrature(n,G,f):
     return
@@ -55,8 +71,8 @@ def Return_Quadrature(XMLFILE,n):
 if __name__ == "__main__":
     k = range(7, 10)
     x = np.linspace(-1, 1, 100)
-    
-    for j in k:    
-        plt.plot(x, [Legendre_0(j, z) - np.polynomial.legendre.Legendre(([1]*j))(z) for z in x])
+    print(Legendre_0(5, 0.5))
+        
+    print(np.polynomial.legendre.leggauss(5))
     
     
