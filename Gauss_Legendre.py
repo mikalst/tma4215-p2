@@ -37,8 +37,7 @@ def Olver(n,x0):
         l0, t = Legendre_0(n, x)
         l1 = Legendre_1(n, x)
         l2 = Legendre_2(n, x)
-        
-        print(l0, l1, l2)
+
                  
         s = np.float128(l0/l1 + l2*l0**2/(2*l1**3))
         x = np.float128(x - s)
@@ -62,7 +61,7 @@ def Legendre_0(n,x):
         res[i+1] = ((2*i+1)*x*res[i] - i*res[i-1])/(i+1)
         
     return res[-1], res
-    
+
 
 def Legendre_1(n,x):
     t, res = Legendre_0(n, x)
@@ -80,7 +79,6 @@ def Legendre_2(n,x):
     l2 = [(k+1/2)*(n*(n+1) - k*(k+1))*res[k] for k in indices]
     
     return sum(l2)
-
     
 
 def Gauss_Legendre_Quadrature(n,G,f):
