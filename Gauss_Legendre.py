@@ -1,7 +1,6 @@
 ################################################################################
 import xml.etree.ElementTree as et
 import numpy as np
-from numpy.polynomial.legendre import *
 import matplotlib.pyplot as plt
 ################################################################################
 
@@ -20,11 +19,11 @@ def Gauss_Legendre_Data(n):
     X = [0 for _ in range(n)]
     W = [0 for _ in range(n)]
     
-    for i in range(1, n):
+    for i in range(1, n+1):
         x0 = 1/2*(np.cos((2*i-1)*np.pi/(2*n+1)) + np.cos((2*i*np.pi)/(2*n+1)))
-        X[i] = Olver(n, x0)
-        l1 = Legendre_1(n, X[i])
-        W[i] = 2/((1-X[i]**2)*l1**2)
+        X[i-1] = Olver(n, x0)
+        l1 = Legendre_1(n, X[i-1])
+        W[i-1] = 2/((1-X[i-1]**2)*l1**2)
     return X, W
     
 
@@ -35,56 +34,54 @@ def Olver(n,x0):
     s = TOL+1
 
     while (abs(s) >= TOL):   
-        l0 = Legendre_0(n, x)
+        l0, t = Legendre_0(n, x)
         l1 = Legendre_1(n, x)
         l2 = Legendre_2(n, x)
+        
+        print(l0, l1, l2)
                  
         s = np.float128(l0/l1 + l2*l0**2/(2*l1**3))
         x = np.float128(x - s)
         
-        print(x)
         
     return x
     
-#def evaluateLegendreSeries(coeff, x):
-#    n = len(coeff)
-#    res = [None for _ in range(n)]
-#    res[0] = coeff[0]*1
-#    res[1] = coeff[1]*x
-#    
-#    for i in range(1, n-1):
-#        res[i+1] = coeff[i+1]*((2*i+1)*x*res[i] - i*res[i-1])/(i+1)
-#        
-#    return sum(res)
-def evaluateLegendreSeries(coeff, x):
-    a = Legendre(coeff)
-    return a(x)
-
 
 def Legendre_0(n,x):
     
-    c = [1 for _ in range(n)]
-            
-    return evaluateLegendreSeries(c, x)
+    if n == 1:
+        return 1
+    if n == 2:
+        return x
+    
+    res = [None for _ in range(n)]
+    res[0] = 1
+    res[1] = x
+    
+    for i in range(1, n-1):
+        res[i+1] = ((2*i+1)*x*res[i] - i*res[i-1])/(i+1)
+        
+    return res[-1], res
+    
 
 def Legendre_1(n,x):
+    t, res = Legendre_0(n, x)
+    indices = filter(lambda k: (k+n)%2==1, range(0, n-1))
     
-    c = [1 for _ in range(n)]
+    l1 = [(2*k +1)*res[k] for k in indices]
     
-    a = np.polynomial.legendre.Legendre(c)
-    b = a.deriv()
-    
-    return b(x)
+    return sum(l1)
 
 
 def Legendre_2(n,x):
+    t, res = Legendre_0(n, x)
+    indices = filter(lambda k: (k+n)%2==0, range(0, n-2))
     
-    c = [1 for _ in range(n)]
+    l2 = [(k+1/2)*(n*(n+1) - k*(k+1))*res[k] for k in indices]
     
-    a = np.polynomial.legendre.Legendre(c)
-    b = a.deriv(2)
+    return sum(l2)
+
     
-    return b(x)
 
 def Gauss_Legendre_Quadrature(n,G,f):
     return
@@ -94,15 +91,22 @@ def Return_Quadrature(XMLFILE,n):
 
     
 if __name__ == "__main__":
+#    
+#    X = np.linspace(-0.95, 0.95, 100)
+#    
+#    Y = [Legendre_0(3, x)[0] for x in X]
+#    dY = [Legendre_1(3, x) for x in X]
+#    ddY = [Legendre_2(3, x) for x in X]
+#    
+#    plt.plot(X, Y)
+#    plt.plot(X, dY)
+#    plt.plot(X, ddY)
+#    
+
     
-    l = Legendre((1, 1, 1))
-    
-    X = np.linspace(-1, 1, 100)
-    Y = [l(x) for x in X]
-    plt.plot(X, Y)
     
     
-    #print(Gauss_Legendre_Data(5))
+    print(Gauss_Legendre_Data(3))
         
     #print(np.polynomial.legendre.leggauss(5))
     
