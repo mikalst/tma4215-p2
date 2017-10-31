@@ -63,32 +63,38 @@ def Legendre_0(n,x):
         return x
     
     
-    res = [None for _ in range(n)]
-    res[0] = 1
-    res[1] = x
+    l0 = [None for _ in range(n)]
+    l0[0] = 1
+    l0[1] = x
     
     for i in range(1, n-1):
-        a = ((2*i+1)*x*res[i] - i*res[i-1])/(i+1)
-        res[i+1] = a
+        a = ((2*i+1)*x*l0[i] - i*l0[i-1])/(i+1)
+        l0[i+1] = a
         
-    return sum(res), res
+    return sum(l0), l0
 
 
 def Legendre_1(n,x):
-    #Det er noe fucky med den her
-    t, res = Legendre_0(n, x)
-    indices = list(filter(lambda k: (k+n)%2==0, range(0, n-1)))
-    #print(indices)
+    #Det er noe fucky med den her FIX, se analytisk uttrtrjlkrjsdljkfs
+    throw ShitAtStuddas
+    t, l0 = Legendre_0(n, x)
+    l1 = [0 for _ in range(n)]
     
-    l1 = [(2*k+1)*res[k] for k in indices]
+    for i in range(n):
+        k_indices = list(filter(lambda k: (k+n)%2==1, range(i)))
+        #print(k_indices)
+        for k in k_indices:
+            l1[i] = l1[i] + (2*k+1)*l0[k]
+    print("x = {}, \nl0 = {} \nl1 = {}".format(x, l0, l1))        
     
     return sum(l1)
+
 
 
 def Legendre_2(n,x):
     t, res = Legendre_0(n, x)
     indices = list(filter(lambda k: (k+n)%2==1, range(0, n-2)))
-    print(indices)
+    #print(indices)
     
     l2 = [(k+1/2)*(n*(n+1) - k*(k+1))*res[k] for k in indices]
     
@@ -104,9 +110,9 @@ def Return_Quadrature(XMLFILE,n):
     
 if __name__ == "__main__":
     
-    N = 8
+    N = 5
     
-    X = np.linspace(-1.0, 1.0, 100)
+    X = np.linspace(-1.0, 1.0, 50)
     
     
     a = np.polynomial.legendre.Legendre([1]*(N))
@@ -115,6 +121,8 @@ if __name__ == "__main__":
     
     Y1 = [Legendre_0(N, x)[0] for x in X]
     Y2 = [a(x) for x in X]
+    #print(b(-1), Legendre_1(N, -1))
+    
     
     dY1 = [Legendre_1(N, x) for x in X]
     dY2 = [b(x) for x in X]
@@ -139,7 +147,7 @@ if __name__ == "__main__":
     plt.legend(["ddY Ours","ddY Numpy"])
     plt.show()
     
-    print(Gauss_Legendre_Data(N))    
+    #print(Gauss_Legendre_Data(N))    
     
     #print(np.polynomial.legendre.leggauss(5))
     
