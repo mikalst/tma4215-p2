@@ -36,7 +36,7 @@ def Olver(n,x0):
 
     while (abs(s) >= TOL):   
         l0, t = Legendre_0(n, x)
-        l1, t = Legendre_1(n, x)
+        l1 = Legendre_1(n, x)
 #        l2 = Legendre_2(n, x)
                  
 #        s = np.float128(l0/l1 + l2*l0**2/(2*l1**3))
@@ -62,7 +62,7 @@ def Legendre_0(n,x):
     for i in range(1, n-1):
         res[i+1] = ( (2*i+1)*x*res[i] - i*res[i-1] )/(i+1)
         
-    return sum(res), res
+    return res[-1], res
 
 def Legendre_1(n,x):
     total, res = Legendre_0(n, x)
@@ -81,7 +81,7 @@ def Legendre_1(n,x):
     for i in range(1, n-2):
         l1res[i+1] = (n+1)/(x**2-1)*(x*res[i]-res[i-1]) 
 
-    return sum(l1res), l1res
+    return l1res[-1]
 
 #def Legendre_2(n,x):
 #    l1tot, l1res = Legendre_1(n, x)
