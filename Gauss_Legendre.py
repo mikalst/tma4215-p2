@@ -19,103 +19,114 @@ def Gauss_Legendre_Data(n):
     X = []
     W = []
     
-    for k in range(1, n+1):
-        xhigh = -np.cos((2*k-1)*np.pi/(2*n+1))
-        xlow = -np.cos((2*k)*np.pi/(2*n+1))
-        x0 = 1/2*(xlow + xhigh)
+    for k in range(1, n+1): # 1 in {1, 2, ... n}
+        xl = np.cos((2*k-1)*np.pi/(2*n+1))
+        xh = np.cos(2*k*np.pi/(2*n+1))
+        x0 = 1/2*(xl+ xh)
         x = Olver(n, x0)
-        print("{} -> {}".format(x0, x))
+        print("{} -> {}".format((xl, xh), x))
         X.append(x)
         if (x):    
-            l1 = Legendre_1(n, x)
+            l1 = Legendre_1(n, x)[1][-1]
             W.append(2/((1-x**2)*l1**2))
-    return X, W
+    
+    G = np.stack((X, W), axis = 1)
+    
+    return G
     
 
 def Olver(n,x0):
     
-    TOL = 1e-10
+    TOL = 1e-14
     x = x0
     s = TOL+1
 
     while (abs(s) >= TOL):   
-        l0, t = Legendre_0(n, x)
-        l1 = Legendre_1(n, x)
-        l2 = Legendre_2(n, x)
+        l0 = Legendre_0(n, x)[1][-1]
+        l1 = Legendre_1(n, x)[1][-1]
+        l2 = Legendre_2(n, x)[1][-1]
 
-        s = np.float128(l0/l1 + l2*l0**2/(2*l1**3))
+        s = np.float128(l0/l1 - l2*l0**2/(2*l1**3))
+        
         x = np.float128(x - s)
-        
-        #print(x)
-        
-        if (x < -2.0 or x > 2.0):
-            return None
-        
         
     return x
     
 
 def Legendre_0(n,x):
-    
-    if n == 1:
+    if n == 0:
         return 1
-    elif n == 2:
+    elif n == 1:
         return x
     
-    
-    l0 = [None for _ in range(n)]
+    l0 = [None for _ in range(n+1)]
     l0[0] = 1
     l0[1] = x
     
-    for i in range(1, n-1):
+    for i in range(1, n):
         a = ((2*i+1)*x*l0[i] - i*l0[i-1])/(i+1)
         l0[i+1] = a
+        
+    #print("x = {} \nl0 = {}".format(x, l0))
         
     return sum(l0), l0
 
 
 def Legendre_1(n,x):
-    #Det er noe fucky med den her FIX, se analytisk uttrtrjlkrjsdljkfs
-    throw ShitAtStuddas
+    
     t, l0 = Legendre_0(n, x)
-    l1 = [0 for _ in range(n)]
+
+    l1 = [0 for _ in range(n+1)]    
+    l1[0] = 0
+    l1[1] = 1
     
-    for i in range(n):
-        k_indices = list(filter(lambda k: (k+n)%2==1, range(i)))
-        #print(k_indices)
-        for k in k_indices:
-            l1[i] = l1[i] + (2*k+1)*l0[k]
-    print("x = {}, \nl0 = {} \nl1 = {}".format(x, l0, l1))        
+    for i in range(2, n+1):
+        l1[i] = (2*i-1)/i*l0[i-1] + (2*i-1)/i*x*l1[i-1] - (i-1)/i * l1[i-2]
+        
+    #print("x = {} \nl0 = {}\n l1 = {}".format(x, l0, l1))
     
-    return sum(l1)
+    return sum(l1), l1
 
 
 
 def Legendre_2(n,x):
-    t, res = Legendre_0(n, x)
-    indices = list(filter(lambda k: (k+n)%2==1, range(0, n-2)))
-    #print(indices)
+    t, l1 = Legendre_1(n, x)
+    l2 = [0 for _ in range(n+1)]
     
-    l2 = [(k+1/2)*(n*(n+1) - k*(k+1))*res[k] for k in indices]
+    l2[0] = 0
+    l2[1] = 0
+    l2[2] = 3
     
-    return sum(l2)
+    for i in range(3, n+1):
+        l2[i] = 2*(2*i-1)/i*l1[i-1] + (2*i-1)/i*x*l2[i-1] - (i-1)/i*l2[i-2]
+        
+    #print("x = {} \nl1 = {}\n l2 = {}".format(x, l1, l2))
+    
+    return sum(l2), l2
     
 
 def Gauss_Legendre_Quadrature(n,G,f):
-    return
+    total = 0
+    for (x, w) in G:
+        total += w*f(x)
+    
+    return total
 
 def Return_Quadrature(XMLFILE,n):
-    return
+    G = Gauss_Legendre_Data(n)
+    f, exactIntegral = XML_Extraction(XMLFILE)
+    
+    return Gauss_Legendre_Quadrature(n, G, f)
 
-    
-if __name__ == "__main__":
-    
-    N = 5
+
+def TestLegendreSeries():
+
+    N = 8
     
     X = np.linspace(-1.0, 1.0, 50)
     
     
-    a = np.polynomial.legendre.Legendre([1]*(N))
+    a = np.polynomial.legendre.Legendre([1]*(N+1))
     b = a.deriv()
     c = a.deriv(2)
     
@@ -124,10 +135,10 @@ if __name__ == "__main__":
     #print(b(-1), Legendre_1(N, -1))
     
     
-    dY1 = [Legendre_1(N, x) for x in X]
+    dY1 = [Legendre_1(N, x)[0] for x in X]
     dY2 = [b(x) for x in X]
     
-    ddY1 = [Legendre_2(N, x) for x in X]
+    ddY1 = [Legendre_2(N, x)[0] for x in X]
     ddY2 = [c(x) for x in X]
     
     
@@ -146,9 +157,32 @@ if __name__ == "__main__":
     plt.plot(X, ddY2)
     plt.legend(["ddY Ours","ddY Numpy"])
     plt.show()
+        
     
-    #print(Gauss_Legendre_Data(N))    
+if __name__ == "__main__":
+#    
+#    N = 5
+#    
+#    X = np.linspace(-1.0, 1.0, 100)
+#    Y = [Legendre_0(N, x)[1][-1] for x in X]
+#    dY = [Legendre_1(N, x)[1][-1] for x in X]
+#    ddY = [Legendre_2(N, x)[1][-1] for x in X]
+#    
+#    plt.plot(X, Y)
+#    plt.show()
+#    plt.plot(X, dY)
+#    plt.show()
+#    plt.plot(X, ddY)
+#    
+    X = np.linspace(-1.0, 1.0, 100)
+    Y = [Legendre_0(20, x)[1][-1] for x in X]
+    plt.plot(X, Y)
+    G = Gauss_Legendre_Data(20)
+    for el in G:
+        print(el[0], el[1])
+        plt.bar(el[0], el[1], width=0.1, color="black")
+
     
+
     #print(np.polynomial.legendre.leggauss(5))
-    
     
