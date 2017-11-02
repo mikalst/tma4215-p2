@@ -10,7 +10,7 @@ def XML_Extraction(XMLFILE):
     root = tree.getroot()
     
     f = lambda x: eval(root[0].text)
-    exactIntegral = float(root[1].text)
+    exactIntegral = eval(root[1].text)
     
     return f, exactIntegral
     
@@ -116,7 +116,12 @@ def Return_Quadrature(XMLFILE,n):
     G = Gauss_Legendre_Data(n)
     f, exactIntegral = XML_Extraction(XMLFILE)
     
-    return Gauss_Legendre_Quadrature(n, G, f)
+    numericalIntegral = Gauss_Legendre_Quadrature(n, G, f)
+    
+    print("numerical = {}, analytic = {}, difference = {}"
+          .format(numericalIntegral, exactIntegral, (numericalIntegral - exactIntegral)))
+    
+    return numericalIntegral
 
 
 def TestLegendreSeries():
@@ -174,13 +179,15 @@ if __name__ == "__main__":
 #    plt.show()
 #    plt.plot(X, ddY)
 #    
-    X = np.linspace(-1.0, 1.0, 100)
-    Y = [Legendre_0(20, x)[1][-1] for x in X]
-    plt.plot(X, Y)
-    G = Gauss_Legendre_Data(20)
-    for el in G:
-        print(el[0], el[1])
-        plt.bar(el[0], el[1], width=0.1, color="black")
+#    X = np.linspace(-1.0, 1.0, 100)
+#    Y = [Legendre_0(20, x)[1][-1] for x in X]
+#    plt.plot(X, Y)
+#    G = Gauss_Legendre_Data(20)
+#    for el in G:
+#        print(el[0], el[1])
+#        plt.bar(el[0], el[1], width=0.1, color="black")
+
+    Return_Quadrature("functions/f1.xml", 6)
 
     
 
