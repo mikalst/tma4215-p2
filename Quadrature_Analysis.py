@@ -43,12 +43,12 @@ def Convergence_Graph(ASCFILE):
     
     plt.style.use("ggplot")
     plt.figure()
-    plt.semilogy(X, Y)    
+    plt.semilogy(X, Y, marker=".")    
     
     plt.title("$(I_{num} - I_{ex})/I_{ex}$ for $f_{"+index+"}$")
     plt.xlabel("$n$")
     plt.ylabel("Relative Error")
-    
+    plt.savefig("plots/f"+str(index)+".pdf")
     plt.show()
     
 
