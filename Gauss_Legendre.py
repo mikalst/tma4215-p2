@@ -1,6 +1,7 @@
 ################################################################################
 import xml.etree.ElementTree as et
 import numpy as np
+from numpy import sin, cos, exp # Need this for the xml files
 import matplotlib.pyplot as plt
 ################################################################################
 
@@ -24,11 +25,10 @@ def Gauss_Legendre_Data(n):
         xh = np.cos(2*k*np.pi/(2*n+1))
         x0 = 1/2*(xl+ xh)
         x = Olver(n, x0)
-        print("{} -> {}".format((xl, xh), x))
+        #print("{} -> {}".format((xl, xh), x))
         X.append(x)
-        if (x):    
-            l1 = Legendre_1(n, x)[1][-1]
-            W.append(2/((1-x**2)*l1**2))
+        l1 = Legendre_1(n, x)[1][-1]
+        W.append(2/((1-x**2)*l1**2))
     
     G = np.stack((X, W), axis = 1)
     
@@ -55,9 +55,9 @@ def Olver(n,x0):
 
 def Legendre_0(n,x):
     if n == 0:
-        return 1
+        return 1, [1]
     elif n == 1:
-        return x
+        return x, [x]
     
     l0 = [None for _ in range(n+1)]
     l0[0] = 1
@@ -73,6 +73,10 @@ def Legendre_0(n,x):
 
 
 def Legendre_1(n,x):
+    if n == 0:
+        return 0, [0]
+    elif n == 1:
+        return 1, [1]
     
     t, l0 = Legendre_0(n, x)
 
@@ -90,6 +94,13 @@ def Legendre_1(n,x):
 
 
 def Legendre_2(n,x):
+    if n == 0:
+        return 0, [0]
+    elif n == 1:
+        return 0, [0]
+    elif n == 2:
+        return 3, [3]
+    
     t, l1 = Legendre_1(n, x)
     l2 = [0 for _ in range(n+1)]
     
@@ -118,78 +129,16 @@ def Return_Quadrature(XMLFILE,n):
     
     numericalIntegral = Gauss_Legendre_Quadrature(n, G, f)
     
-    print("numerical = {}, analytic = {}, difference = {}"
-          .format(numericalIntegral, exactIntegral, (numericalIntegral - exactIntegral)))
+    relError = np.abs((numericalIntegral - exactIntegral)/exactIntegral)
     
-    return numericalIntegral
-
-
-def TestLegendreSeries():
-
-    N = 8
+    #print("numerical = {}, analytic = {}, difference = {}"
+    #      .format(numericalIntegral, exactIntegral, (numericalIntegral - exactIntegral)))
     
-    X = np.linspace(-1.0, 1.0, 50)
-    
-    
-    a = np.polynomial.legendre.Legendre([1]*(N+1))
-    b = a.deriv()
-    c = a.deriv(2)
-    
-    Y1 = [Legendre_0(N, x)[0] for x in X]
-    Y2 = [a(x) for x in X]
-    #print(b(-1), Legendre_1(N, -1))
-    
-    
-    dY1 = [Legendre_1(N, x)[0] for x in X]
-    dY2 = [b(x) for x in X]
-    
-    ddY1 = [Legendre_2(N, x)[0] for x in X]
-    ddY2 = [c(x) for x in X]
-    
-    
-    plt.style.use("ggplot")
-    plt.plot(X, Y1)
-    plt.plot(X, Y2)
-    plt.legend(["Y Ours","Y Numpy"])
-    plt.show()
-    
-    plt.plot(X, dY1)
-    plt.plot(X, dY2)
-    plt.legend(["dY Ours","dY Numpy"])
-    plt.show()
-    
-    plt.plot(X, ddY1)
-    plt.plot(X, ddY2)
-    plt.legend(["ddY Ours","ddY Numpy"])
-    plt.show()
+    return numericalIntegral, exactIntegral, relError
         
     
 if __name__ == "__main__":
-#    
-#    N = 5
-#    
-#    X = np.linspace(-1.0, 1.0, 100)
-#    Y = [Legendre_0(N, x)[1][-1] for x in X]
-#    dY = [Legendre_1(N, x)[1][-1] for x in X]
-#    ddY = [Legendre_2(N, x)[1][-1] for x in X]
-#    
-#    plt.plot(X, Y)
-#    plt.show()
-#    plt.plot(X, dY)
-#    plt.show()
-#    plt.plot(X, ddY)
-#    
-#    X = np.linspace(-1.0, 1.0, 100)
-#    Y = [Legendre_0(20, x)[1][-1] for x in X]
-#    plt.plot(X, Y)
-#    G = Gauss_Legendre_Data(20)
-#    for el in G:
-#        print(el[0], el[1])
-#        plt.bar(el[0], el[1], width=0.1, color="black")
 
-    Return_Quadrature("functions/f1.xml", 6)
+    Return_Quadrature("functions/f6.xml", 1)
 
-    
-
-    #print(np.polynomial.legendre.leggauss(5))
     
