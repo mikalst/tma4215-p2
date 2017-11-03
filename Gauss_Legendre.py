@@ -131,8 +131,8 @@ def Return_Quadrature(XMLFILE,n):
     
     relError = np.abs((numericalIntegral - exactIntegral)/exactIntegral)
     
-    #print("numerical = {}, analytic = {}, difference = {}"
-    #      .format(numericalIntegral, exactIntegral, (numericalIntegral - exactIntegral)))
+    print("numerical = {}, analytic = {}, difference = {}"
+          .format(numericalIntegral, exactIntegral, (numericalIntegral - exactIntegral)))
     
     return numericalIntegral, exactIntegral, relError
         
