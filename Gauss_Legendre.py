@@ -2,7 +2,6 @@
 import xml.etree.ElementTree as et
 import numpy as np
 from numpy import sin, cos, exp # Need this for the xml files
-import matplotlib.pyplot as plt
 ################################################################################
 
 
@@ -138,7 +137,6 @@ def Return_Quadrature(XMLFILE,n):
         
     
 if __name__ == "__main__":
-
     Return_Quadrature("functions/f6.xml", 1)
 
     
