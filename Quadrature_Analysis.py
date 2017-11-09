@@ -28,7 +28,7 @@ def Convergence_Graph(pathToErr, pathToPlot):
     
     relErrors = {}
     
-    f_index = os.path.split(pathToErr)[1]
+    f_index = os.path.splitext(os.path.split(pathToErr)[1])[0]
     
     
     with open (pathToErr, 'r') as file:
@@ -43,11 +43,13 @@ def Convergence_Graph(pathToErr, pathToPlot):
     plt.figure()
     plt.semilogy(X, Y, marker=".")    
     
-    plt.title("$(I_{num} - I_{ex})/I_{ex}$ for "+f_index)
+    plt.title("$(I_{num} - I_{ex})/I_{ex}$ for $"+f_index[0]+"_{"+f_index[1:]+"}$")
     plt.xlabel("$n$")
     plt.ylabel("Relative Error")
     plt.savefig(pathToPlot)
     plt.show()
+    
+    return
     
 
 def main():
