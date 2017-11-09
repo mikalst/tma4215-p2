@@ -64,7 +64,7 @@ def main():
         try:
             XMLFILE = str(args[0])
             PROGRAM = int(args[1])
-            if PROGRAM == 1:
+            if PROGRAM == 1 or PROGRAM == 12:
                 n1 = int(args[2])
                 n2 = int(args[3])
         except IndexError or ValueError:
@@ -99,6 +99,15 @@ def main():
     elif PROGRAM == 2:
         print("Plotting from", pathToPlot)
         Convergence_Graph(pathToErr, pathToPlot)
+        
+    elif PROGRAM  == 12:
+        assert(n2 > n1)
+        print("Running Leg-Gauss on", pathToXML, 
+              "with n = {}, {}, ... {}".format(n1, (n1+1), n2))
+        Repeated_Quadrature(pathToXML, pathToErr, n1, n2)
+        print("Plotting from", pathToPlot)
+        Convergence_Graph(pathToErr, pathToPlot)
+        
         
         
 if __name__ == "__main__":

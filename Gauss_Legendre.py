@@ -16,15 +16,16 @@ def XML_Extraction(XMLFILE):
     
 def Gauss_Legendre_Data(n):
     
-    G = np.zeros((n, 2))
+    G = np.zeros((n, 2), dtype=np.float128)
     
     for k in range(1, n+1): # 1 in {1, 2, ... n}
+    
         xl = np.cos((2*k-1)*np.pi/(2*n+1))
         xh = np.cos(2*k*np.pi/(2*n+1))
-        x0 = 1/2*(xl+ xh)
+        
+        x0 = np.float128(1/2*(xl+ xh))
         x = Olver(n, x0)
         
-        #print("{} -> {}".format((xl, xh), x))
         l0, l0n = Legendre_0(n, x)
         l1 = Legendre_1(n, x, l0)
         w = 2/((1-x**2)*l1**2)
@@ -46,9 +47,8 @@ def Olver(n,x0):
         l0, l0n = Legendre_0(n, x)
         l1n = Legendre_1(n, x, l0)
         l2n = Legendre_2(n, x, l0)
-        #print(l0n, l1n, l2n)
+
         s = l0n/l1n - l2n*l0n**2/(2*l1n**3)
-        #print(l0s)
         
         x = x - s
         
@@ -65,14 +65,12 @@ def Legendre_0(n,x):
     l0[0] = 1
     l0[1] = x
     
+    
     for i in range(1, n):
-        a = ((2*i+1)*x*l0[i] - i*l0[i-1])/(i+1)
-        l0[i+1] = a
+        l0n = ((2*i+1)*x*l0[i] - i*l0[i-1])/(i+1)# Now l0[i] and l0[i-1] are float128
+        l0[i+1] = l0n
         
-    #print("x = {} \nl0 = {}".format(x, l0))
-    #print(l0[-1])
-        
-    return l0, l0[-1]
+    return l0, l0n
 
 
 def Legendre_1(n, x, l0):
@@ -81,8 +79,13 @@ def Legendre_1(n, x, l0):
     elif n == 1:
         return 1
     
+    l1 = np.zeros((n+1, 1), dtype=np.float128)
     indices = filter(lambda k: (k+n)%2==1, range(0, n))
-    l1n = sum([(2*k+1)*l0[k] for k in indices])
+    
+    for k in indices:
+        l1[k] = (2*k+1)*l0[k]
+        
+    l1n = np.sum(l1)
     
     return l1n
 
@@ -95,8 +98,13 @@ def Legendre_2(n, x, l0):
     elif n == 2:
         return 3
         
+    l2 = np.zeros((n+1, 1), dtype=np.float128)
     indices = filter(lambda k: (k+n)%2==0, range(0, n-1))
-    l2n = sum([(k+1/2)*(n*(n+1)-k*(k+1))*l0[k] for k in indices])
+    
+    for k in indices:
+        l2[k] = (k+1/2)*(n*(n+1)-k*(k+1))*l0[k]
+        
+    l2n = np.sum(l2)
     
     return l2n
     
@@ -121,7 +129,7 @@ def Return_Quadrature(XMLFILE,n):
         
     
 if __name__ == "__main__":
-    print(Return_Quadrature("functions/f6.xml", 10))
+    print(Return_Quadrature("functions/f6.xml", 100))
 
 
     
