@@ -87,6 +87,7 @@ def Legendre_1(n,x):
         l1[i] = (2*i-1)/i*l0[i-1] + (2*i-1)/i*x*l1[i-1] - (i-1)/i * l1[i-2]
         
     #print("x = {} \nl0 = {}\n l1 = {}".format(x, l0, l1))
+    #print("l1 = {}".format(l1[-1]))
     
     return sum(l1), l1
 
@@ -130,9 +131,9 @@ def Return_Quadrature(XMLFILE,n):
     
     relError = np.abs((numericalIntegral - exactIntegral)/exactIntegral)
     
-    print("numerical = {}, analytic = {}, difference = {}"
-          .format(numericalIntegral, exactIntegral, (numericalIntegral - exactIntegral)))
-    
+#    print("numerical = {}, analytic = {}, difference = {}"
+#          .format(numericalIntegral, exactIntegral, (numericalIntegral - exactIntegral)))    
+
     return numericalIntegral, exactIntegral, relError
         
     
