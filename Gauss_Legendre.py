@@ -2,6 +2,7 @@
 import xml.etree.ElementTree as et
 import numpy as np
 from numpy import sin, cos, exp # Need this for the xml files
+import time
 ################################################################################
 
 
@@ -16,20 +17,22 @@ def XML_Extraction(XMLFILE):
     
 def Gauss_Legendre_Data(n):
     
-    X = []
-    W = []
+    G = np.zeros((n, 2))
     
     for k in range(1, n+1): # 1 in {1, 2, ... n}
         xl = np.cos((2*k-1)*np.pi/(2*n+1))
         xh = np.cos(2*k*np.pi/(2*n+1))
         x0 = 1/2*(xl+ xh)
         x = Olver(n, x0)
+        
         #print("{} -> {}".format((xl, xh), x))
-        X.append(x)
+        
         l1 = Legendre_1(n, x)[1][-1]
-        W.append(2/((1-x**2)*l1**2))
-    
-    G = np.stack((X, W), axis = 1)
+        w = 2/((1-x**2)*l1**2)
+        
+        G[k-1, 0] = x
+        G[k-1, 1] = w
+
     
     return G
     
