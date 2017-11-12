@@ -47,9 +47,10 @@ def Convergence_Graph(pathToErr, pathToPlot):
     plt.show()
 
 
-def main():
-
-    name, *args = sys.argv
+def main(*args, **kwargs):
+    # Program can accept STDIN arguments or parameters
+    arguments = args if args else sys.argv
+    name, *args = arguments
 
     if not args:
         XMLFILE = "f1"
