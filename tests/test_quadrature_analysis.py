@@ -6,6 +6,9 @@ def test_main_function_with_correct_arguments():
     assert main('f1', '1', '1', '10') == None
 
 def test_errors_produced_by_f1():
+    errors_file_path = os.path.join('errors', 'f1.txt')
+    os.remove(errors_file_path)
+
     main('f1', '1', '1', '10')
 
     errors = """\
@@ -20,5 +23,6 @@ def test_errors_produced_by_f1():
 9 2.63586228165e-17
 10 7.8813157923e-19
 """
-    with open(os.path.join('errors', 'f1.txt')) as error_file:
+
+    with open(errors_file_path) as error_file:
         assert error_file.read() == errors
