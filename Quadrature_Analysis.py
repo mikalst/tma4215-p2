@@ -1,11 +1,8 @@
-################################################################################
 import sys
 import os
-#import numpy as np
-#import matplotlib as mpl
+
 import matplotlib.pyplot as plt
 import Gauss_Legendre as Leg
-################################################################################
 
 
 def Repeated_Quadrature(pathToXml, pathToErr, n1, n2):
