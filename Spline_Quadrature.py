@@ -8,8 +8,8 @@ import time
 
 
 def Prepare_Data(T,p):
-    """Prepare_Data, for creating the initial condition and augmenting the knot
-    vector. It must also return n and the constant integral vector in F.
+    """Prepare_Data, create the initial condition and augment the knot
+    vector.
     """
     basis = spl.BSplineBasis(p+1, knots=T)
     
@@ -33,9 +33,8 @@ def Prepare_Data(T,p):
     return basis, I, W, X, n
 
 def Assembly(basis,I,W,X,n):
-    '''updating Fn and ∂Fn every time in the Newton iteration.
-    Recall that ∂Fn must be permuted and made sparse.
-    '''
+    """update F and dF every time in the Newton iteration.
+    """
     N = basis.evaluate(X).T
     dN = basis.evaluate(X, d=1).T
 
@@ -51,8 +50,6 @@ def Assembly(basis,I,W,X,n):
 #    J = sp.sparse.csr_matrix(J)    
 
     return F, J
-
-basis, I, W, X, n = Prepare_Data(t1, 2)
 
 
 def Spline_Quadrature(T, p):
