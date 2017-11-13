@@ -1,18 +1,18 @@
-################################################################################
 import xml.etree.ElementTree as et
+
 import numpy as np
-from numpy import sin, cos, exp # Need this for the xml files
-################################################################################
+from numpy import sin, cos, exp  # Need this for the xml files
 
 
 def XML_Extraction(XMLFILE):
     tree = et.parse(XMLFILE)
     root = tree.getroot()
 
-    f = lambda x: eval(root[0].text)
+    f = eval('lambda x: ' + root[0].text)
     exactIntegral = eval(root[1].text)
 
     return f, exactIntegral
+
 
 def Gauss_Legendre_Data(n):
 
