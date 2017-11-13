@@ -1,108 +1,117 @@
-################################################################################
 import numpy as np
 import scipy as sp
 import splipy as spl
 import sys
 ################################################################################
+import time
 
-#
-def Prepare_Data(T, p):
-                
-    basis = spl.BSplineBasis(p, T)
-    
+def Prepare_Data(T,p):
+    '''Prepare_Data, for creating the initial condition and augmenting the knot
+    vector. It must also return n and the constant integral vector in F.
+    Done as in the paper: https://ac.els-cdn.com/S004578251630281X/1-s2.0-S004578251630281X-main.pdf?_tid=780e6096-c795-11e7-96c6-00000aacb35e&acdnat=1510483224_a01b14974539b6464a7dce410b080add
+    '''
+    basis = spl.BSplineBasis()
+    basis.__init__(order=p+1, knots=T)
     #number of weights of knots
-    n = basis.num_functions()
+    n = basis.__len__() -p-1#egt 2n??
     
-    print(n)
-    
-    #Add extra knot to make even number of knots
+    #augmenting knot vector: adding to the knot vector if number of basis function is odd. Dette må først!
     if n%2==1:
         t = (basis.knots[p]+basis.knots[p+1])/2
-        basis.insert_knot(t)
-        n = basis.num_functions()
-        
-    T = basis.knots
-        
-    #Convert n to format specified in [1].
-    n = int(n/2)
-    
-    G = np.array(basis.greville())
-    I = (T[p:] - T[:-(p)])/(p+1) 
-
-    X = np.empty((n, ))
-    W = np.empty((n, ))
-    
-#    print(G)
-#    print(I)
-
-    for i in range(n):
-        X[i] = (G[2*i+1] + G[2*i])/2
-        W[i] = I[2*i+1] + I[2*i]
-        
-#    print(X)
-#    print(W)
+        basis.insert_knot(t) #(τp+1 + τp+2)/2 between τp+1 and τp+2
+        n+=1
+    #constant integral vector in F.
+    I = (basis.knots[p+1:]-basis.knots[:-p-1])/(p+1)
+    #create initial condition
+    G = np.array(basis.greville()) #greville innebygd
+    X = np.array(G[1::2]+G[::2])/2 #nodes
+    W = I[1::2]+I[::2] #weights
     
     return basis, I, W, X, n
-        
-    
+
+t1 = np.array([0, 0, 0, 1, 2,  3, 4, 4, 4])
+
 def Assembly(basis,I,W,X,n):
+    '''updating Fn and ∂Fn every time in the Newton iteration.
+    Recall that ∂Fn must be permuted and made sparse
+    Kanskje bare endre der X har endret seg? bedre tid?
+    '''
+    #make Fn. Trenger kanskje ikke hver gang? Kun oppdatere istedet?
+    F = np.zeros(n)
     
-    N = basis.evaluate(X)
-    print("N = ",N ,sep = "\n")
-    dN = basis.evaluate(X, d=1)
-    print("dN = ", dN, sep = "\n")
-    #print(X, N, dN, W,sep="\n\n")
-    
-    F = np.empty((2*n, ))
-    
-    J = np.empty((2*n, 2*n))
-    
-    for j in range(2*n):
-        for i in range(n): 
-            #print(i, j)
-            J[i, j] = N[i, j]
-            J[i+n, j] = np.dot(W[i], dN[i, j])
-        
-        F[j] = np.dot(W, N[:, j]) - I[j]
-    
-    print("F = ", F, sep="\n")
-        
-    print("J = ", J, sep="\n")
-    
-    #Run Newton
-    S = np.linalg.solve(J, F)
-    
-    W = W - S[:n]
-    X = X - S[n:]
-    
-    print("X = {}".format(X))
-    
-    return X
-    
-    
+    #make ∂Fn. Trenger kanskje ikke hver gang? Kun oppdatere istedet?
+    J = np.zeros(shape=(n,n))#.sparse.csr_matrix(n, n, dtype=float), få det til å funke først
 
-def Spline_Quadrature():
-    T = [0, 0, 0, 0, 1, 2, 3, 4, 4, 4, 4]
-    p = 3
+
+    #dspline = spl.SplineObject().__init__(basis, X)
+
+    N = basis.evaluate(X).T
+    dN = basis.evaluate(X, d=1).T#sparse=true
+
+    #update Fn
+    #F = np.squeeze(N.dot(W)-I) # dette skal funke, men gjør det ikke
+    for j in range(n):
+        F[j] = np.sum(W*N[j].T) - I[j] # F=N*W-I???
     
-    Errors = []
-    TOL = 1e-10
-    improvement = float('inf')
+    #update ∂Fn
+    temp = dN*sp.sparse.diags(W, 0)
+    J = np.concatenate((N, temp), axis=1)#dN*diag(sparse(W))
+
+    #∂Fn permuted and made sparse
+    J = sp.sparse.csr_matrix(J)
+
+    return F, J
+
+basis, I, W, X, n = Prepare_Data(t1, 2)
+
+F, J = Assembly(basis, I, W, X, n)
+#print(F)
+#print(J.todense())
+
+
+def Spline_Quadrature(T, p):
+    '''the main program with Newton iteration.'''
+    # husk: The arrays obtained after using evaluate must be transposed.
+    
+    #Tolerance
+    tol = 1e-11
+
+    #Prepare_data
     basis, I, W, X, n = Prepare_Data(T, p)
-    print("X0 = {}".format(X))
-    
-    while improvement > TOL:
-        print("---")
-        X_last = X
-        X = Assembly(basis, I, W, X, n)
-        Errors.append(X)
-        improvement = np.linalg.norm(X-X_last)
-    
-    print(Errors)
+    print('Starting at: \n W: ', W, '\n X: ', X)
+    #Assembly
+    F, J = Assembly(basis, I, W, X, n)
+    #First iteration
+    delta = sp.sparse.linalg.spsolve(J, F)
+#    W -= delta[0]
+#    X -= delta[1]
+    W -= delta[:int(n/2)]
+    X -= delta[int(n/2):]
+    norm = np.linalg.norm(delta)
+    itcount = 1
+    print('Iteration ', itcount, '\t X = ',X ,'\t W = ', W, '\t Norm = %0.2E' % norm)
+
+    while abs(norm)>tol and itcount < 20:
+
+        F, J = Assembly(basis,I,W,X,n)
+        delta = sp.sparse.linalg.spsolve(J, F)
+        W -= delta[0]
+        X -= delta[1]
+
+        norm = np.linalg.norm(delta)
+
+        itcount+=1
+        print('Iteration ', itcount, '\t X = ',X ,'\t W = ', W, '\t Norm = %0.2E' % norm)
+        if min(X)<T[0]:
+            print('SINGULAR MATRIX!')
+            break
+        if max(X)>T[-1]:
+            print('SINGULAR MATRIX!')
+            break
 
 
-t1 = np.array([0, 0, 0, 1, 2, 3, 4, 4, 4])
-Spline_Quadrature()
+    if abs(norm) > tol:
+        itcount = -1 #Does not converge within 100 iterations
+    return W, X, itcount
 
-    
-    
+Spline_Quadrature(t1, 2)
