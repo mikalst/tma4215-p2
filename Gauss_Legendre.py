@@ -86,7 +86,7 @@ def Legendre_1(n, x, l0):
     else:
         indices = np.arange(0, n, step=2)
 
-    return np.sum(((2 * indices + 1) * l0[indices].T).T)
+    return np.sum((2 * indices + 1) * l0[indices].T)
 
 
 def Legendre_2(n, x, l0):
@@ -97,15 +97,8 @@ def Legendre_2(n, x, l0):
     elif n == 2:
         return 3
 
-    l2 = np.zeros((n+1, 1), dtype=np.float128)
-    indices = filter(lambda k: (k+n)%2==0, range(0, n-1))
-
-    for k in indices:
-        l2[k] = (k+1/2)*(n*(n+1)-k*(k+1))*l0[k]
-
-    l2n = np.sum(l2)
-
-    return l2n
+    indices = np.arange(n % 2, n-1, step=2)
+    return np.sum((indices+1/2)*(n*(n+1)-indices*(indices+1))*l0[indices].T)
 
 
 def Gauss_Legendre_Quadrature(n,G,f):
