@@ -81,15 +81,12 @@ def Legendre_1(n, x, l0):
     elif n == 1:
         return 1
 
-    l1 = np.zeros((n+1, 1), dtype=np.float128)
-    indices = filter(lambda k: (k+n)%2==1, range(0, n))
+    if n % 2 == 0:
+        indices = np.arange(1, n, step=2)
+    else:
+        indices = np.arange(0, n, step=2)
 
-    for k in indices:
-        l1[k] = (2*k+1)*l0[k]
-
-    l1n = np.sum(l1)
-
-    return l1n
+    return np.sum(((2 * indices + 1) * l0[indices].T).T)
 
 
 def Legendre_2(n, x, l0):
