@@ -4,105 +4,108 @@ import scipy as sp
 import splipy as spl
 import sys
 ################################################################################
+import time
 
-#
-def Prepare_Data(T, p):
-                
-    basis = spl.BSplineBasis(p, T)
+
+def Prepare_Data(T,p):
+    """Prepare_Data, create the initial condition and augment the knot
+    vector.
+    """
+    basis = spl.BSplineBasis(p+1, knots=T)
     
     #number of weights of knots
-    n = basis.num_functions()
+    n = len(basis)-p-1
     
-    print(n)
-    
-    #Add extra knot to make even number of knots
+    #augmenting knot vector
     if n%2==1:
         t = (basis.knots[p]+basis.knots[p+1])/2
-        basis.insert_knot(t)
-        n = basis.num_functions()
+        basis.insert_knot(t) #(τp+1 + τp+2)/2 between τp+1 and τp+2
+        n+=1
         
-    T = basis.knots
-        
-    #Convert n to format specified in [1].
-    n = int(n/2)
+    #constant integral vector in F.
+    I = (basis.knots[p+1:]-basis.knots[:-p-1])/(p+1)
     
+    #create initial condition
     G = np.array(basis.greville())
-    I = (T[p:] - T[:-(p)])/(p+1) 
-
-    X = np.empty((n, ))
-    W = np.empty((n, ))
-    
-#    print(G)
-#    print(I)
-
-    for i in range(n):
-        X[i] = (G[2*i+1] + G[2*i])/2
-        W[i] = I[2*i+1] + I[2*i]
-        
-#    print(X)
-#    print(W)
+    X = np.array(G[1::2]+G[::2])/2
+    W = I[1::2]+I[::2]
     
     return basis, I, W, X, n
-        
-    
-def Assembly(basis,I,W,X,n):
-    
-    N = basis.evaluate(X)
-    print("N = ",N ,sep = "\n")
-    dN = basis.evaluate(X, d=1)
-    print("dN = ", dN, sep = "\n")
-    #print(X, N, dN, W,sep="\n\n")
-    
-    F = np.empty((2*n, ))
-    
-    J = np.empty((2*n, 2*n))
-    
-    for j in range(2*n):
-        for i in range(n): 
-            #print(i, j)
-            J[i, j] = N[i, j]
-            J[i+n, j] = np.dot(W[i], dN[i, j])
-        
-        F[j] = np.dot(W, N[:, j]) - I[j]
-    
-    print("F = ", F, sep="\n")
-        
-    print("J = ", J, sep="\n")
-    
-    #Run Newton
-    S = np.linalg.solve(J, F)
-    
-    W = W - S[:n]
-    X = X - S[n:]
-    
-    print("X = {}".format(X))
-    
-    return X
-    
-    
 
-def Spline_Quadrature():
-    T = [0, 0, 0, 0, 1, 2, 3, 4, 4, 4, 4]
-    p = 3
+def Assembly(basis,I,W,X,n):
+    """update F and dF every time in the Newton iteration.
+    """
+    N = basis.evaluate(X).T
+    dN = basis.evaluate(X, d=1).T
+
+    F = np.zeros(n)
+    F[:] = np.dot(N, W) - I
     
-    Errors = []
-    TOL = 1e-10
-    improvement = float('inf')
+    
+    dFde = dN*sp.sparse.diags(W)
+    
+    J = np.concatenate((N, dFde), axis=1) #dN*diag(sparse(W))
+        
+    #Uncomment if we want sparse
+#    J = sp.sparse.csr_matrix(J)    
+
+    return F, J
+
+
+def Spline_Quadrature(T, p):
+    """Newton iteration"""
+    
+    #Tolerance
+    TOL = 1e-11
+
+    #Prepare_data
     basis, I, W, X, n = Prepare_Data(T, p)
-    print("X0 = {}".format(X))
+    #print('Starting at: \n W: ', W, '\n X: ', X)
     
-    while improvement > TOL:
-        print("---")
-        X_last = X
-        X = Assembly(basis, I, W, X, n)
-        Errors.append(X)
-        improvement = np.linalg.norm(X-X_last)
+    #Assembly
+    F, J = Assembly(basis, I, W, X, n)
     
-    print(Errors)
+    #Initialize improvement to inf and iteration count to 0
+    norm = float('inf')
+    itcount = 0
+    
+    while norm>TOL and itcount < 20:
+
+        F, J = Assembly(basis,I,W,X,n)
+        #Sparse solver
+#        delta = sp.sparse.linalg.spsolve(J, F)
+        #Dense solver        
+        delta = np.linalg.solve(J, F)
+        
+        W -= delta[:int(n/2)]
+        X -= delta[int(n/2):]
+
+        norm = np.linalg.norm(delta)
+
+        itcount+=1
+        
+        #print('Iteration ', itcount, '\t X = ',X ,'\t W = ', W, '\t Norm = %0.2E' % norm)
+        
+        #If goes outside boundaries, we have a singular matrix
+        if min(X)<T[0] or max(X)>T[-1]:
+            print('SINGULAR MATRIX!')
+            break
+
+     #Does not converge within 20 iterations
+    if abs(norm) > TOL:
+        itcount = -1
+        
+    return W, X, itcount
 
 
 t1 = np.array([0, 0, 0, 1, 2, 3, 4, 4, 4])
-Spline_Quadrature()
+t2 = np.array([0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4])
+t3 = np.array([0, 0, 0, 0, 1, 2, 3, 4, 4, 4, 4])
+t4 = np.array([0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 4])
 
-    
-    
+t = time.clock()
+Spline_Quadrature(t1, 2)
+Spline_Quadrature(t2, 2)
+Spline_Quadrature(t3, 3)
+Spline_Quadrature(t4, 3)
+print("Time spent: {}".format(int((time.clock() - t)*1000)), "ms.", sep="")
