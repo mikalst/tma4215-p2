@@ -14,24 +14,26 @@ def XML_Extraction(XMLFILE):
     return f, exactIntegral
 
 
-def Gauss_Legendre_Data(n):
+def Gauss_Legendre_Data(n: int):
 
     G = np.zeros((n, 2), dtype=np.float128)
 
-    for k in range(1, n+1): # 1 in {1, 2, ... n}
+    k = np.arange(1, n+1)
 
-        xl = np.cos((2*k-1)*np.pi/(2*n+1))
-        xh = np.cos(2*k*np.pi/(2*n+1))
+    xl = np.cos((2*k-1)*np.pi/(2*n+1))
+    xh = np.cos(2*k*np.pi/(2*n+1))
 
-        x0 = np.float128(1/2*(xl+ xh))
-        x = Olver(n, x0)
+    x0 = np.float128(1/2*(xl+ xh))
+
+    for i in range(0, n):
+        x = Olver(n, x0[i])
 
         l0, l0n = Legendre_0(n, x)
         l1 = Legendre_1(n, x, l0)
         w = 2/((1-x**2)*l1**2)
 
-        G[k-1, 0] = x
-        G[k-1, 1] = w
+        G[i-1, 0] = x
+        G[i-1, 1] = w
 
 
     return G
