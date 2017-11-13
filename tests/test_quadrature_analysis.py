@@ -26,3 +26,35 @@ def test_errors_produced_by_f1():
 
     with open(errors_file_path) as error_file:
         assert error_file.read() == errors
+
+def test_errors_produced_by_f6():
+    errors_file_path = os.path.join('errors', 'f6.txt')
+    os.remove(errors_file_path)
+
+    main('f6', '1', '1', '20')
+
+    errors = """\
+1 1.0
+2 0.359761434409
+3 0.0542663665355
+4 0.00362156280181
+5 0.000225249571234
+6 2.47356012228e-06
+7 1.3475281515e-08
+8 3.60270774865e-10
+9 1.89443243235e-12
+10 3.44732056933e-16
+11 8.34897950384e-17
+12 7.40635278566e-18
+13 1.14461815778e-16
+14 1.85158819642e-18
+15 6.11024104817e-17
+16 1.35502590738e-17
+17 1.34913449039e-16
+18 5.681009239e-17
+19 1.09496192888e-16
+20 5.46218517943e-17
+"""
+
+    with open(errors_file_path) as error_file:
+        assert error_file.read() == errors
