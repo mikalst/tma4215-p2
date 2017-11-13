@@ -7,7 +7,11 @@ def test_main_function_with_correct_arguments():
 
 def test_errors_produced_by_f1():
     errors_file_path = os.path.join('errors', 'f1.txt')
-    os.remove(errors_file_path)
+
+    try:
+        os.remove(errors_file_path)
+    except FileNotFoundError:
+        pass
 
     main('f1', '1', '1', '10')
 
@@ -29,7 +33,11 @@ def test_errors_produced_by_f1():
 
 def test_errors_produced_by_f6():
     errors_file_path = os.path.join('errors', 'f6.txt')
-    os.remove(errors_file_path)
+
+    try:
+        os.remove(errors_file_path)
+    except FileNotFoundError:
+        pass
 
     main('f6', '1', '1', '20')
 
