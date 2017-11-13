@@ -23,22 +23,22 @@ def Repeated_Quadrature(pathToXml, pathToErr, n1, n2):
 
 def Convergence_Graph(pathToErr, pathToPlot):
 
-    relErrors = {}
+    relX = []
+    relErrors = []
 
     f_index = os.path.split(pathToErr)[1]
 
 
-    with open (pathToErr, 'r') as file:
-        for line in file.readlines():
-            n, err = line.split(" ")
-            relErrors[n] = err
-
-    X = list(relErrors.keys())
-    Y = list(relErrors.values())
+    with open (pathToErr, 'r') as file: 
+        mylist = file.read().splitlines()
+        for el in mylist:
+            n, err = el.split(" ")
+            relX.append(int(n))
+            relErrors.append(float(err))
 
     plt.style.use("ggplot")
     plt.figure()
-    plt.semilogy(X, Y, marker=".")
+    plt.semilogy(relX, relErrors, marker=".")
 
     plt.title("$(I_{num} - I_{ex})/I_{ex}$ for "+f_index)
     plt.xlabel("$n$")
