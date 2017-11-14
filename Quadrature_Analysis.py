@@ -22,11 +22,10 @@ def Repeated_Quadrature(pathToXml, pathToErr, n1, n2):
 
 
 def Convergence_Graph(pathToErr, pathToPlot):
-
     relX = []
     relErrors = []
 
-    f_index = os.path.split(pathToErr)[1]
+    f_index, ext = os.path.splitext(os.path.split(pathToErr)[1])
 
 
     with open (pathToErr, 'r') as file: 
@@ -40,11 +39,14 @@ def Convergence_Graph(pathToErr, pathToPlot):
     plt.figure()
     plt.semilogy(relX, relErrors, marker=".")
 
-    plt.title("$(I_{num} - I_{ex})/I_{ex}$ for "+f_index)
+    plt.title("$(I_{num} - I_{ex})/I_{ex}$ for $f_{"+f_index[1:]+"}$")
     plt.xlabel("$n$")
     plt.ylabel("Relative Error")
     plt.savefig(pathToPlot)
     plt.show()
+    
+    return
+
 
 
 def main(*args, **kwargs):

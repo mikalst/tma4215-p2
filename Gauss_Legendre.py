@@ -18,20 +18,51 @@ def Gauss_Legendre_Data(n):
     
     G = np.zeros((n, 2), dtype=np.float128)
     
-    for k in range(1, n+1): # 1 in {1, 2, ... n}
-    
-        xl = np.cos((2*k-1)*np.pi/(2*n+1))
-        xh = np.cos(2*k*np.pi/(2*n+1))
+    if n%2==0:
+        #Polynomial is even.
+        #Due to symmetry of the zeroes, we only need to solve on x in [-1, 0].
+        for k in range(1, int(n/2)+1): # 1 in {1, 2, ... n/2 + 1}
+            xl = np.cos((2*k-1)*np.pi/(2*n+1))
+            xh = np.cos(2*k*np.pi/(2*n+1))
+            
+            x0 = np.float128(1/2*(xl+ xh))
+            x = Olver(n, x0)
+            
+            l0, l0n = Legendre_0(n, x)
+            l1 = Legendre_1(n, x, l0)
+            w = 2/((1-x**2)*l1**2)
+            
+            G[k-1, 0] = x
+            G[k-1, 1] = w
+            
+            G[n-k, 0] = -x
+            G[n-k, 1] = w
+            
+    else:
+        #Polynomial is odd.
+        #Same as for even, but we are guaranteed to have a zero at x = 0.
+        l0, l0n = Legendre_0(n, 0)
+        l1 = Legendre_1(n, 0, l0)
+        w = 2/(l1**2)
+        G[int((n-1)/2), 0] = 0
+        G[int((n-1)/2), 1] = w
         
-        x0 = np.float128(1/2*(xl+ xh))
-        x = Olver(n, x0)
-        
-        l0, l0n = Legendre_0(n, x)
-        l1 = Legendre_1(n, x, l0)
-        w = 2/((1-x**2)*l1**2)
-        
-        G[k-1, 0] = x
-        G[k-1, 1] = w
+        for k in range(1, int((n+1)/2)): # 1 in {1, 2, ... (n+1)/2}
+            xl = np.cos((2*k-1)*np.pi/(2*n+1))
+            xh = np.cos(2*k*np.pi/(2*n+1))
+            
+            x0 = np.float128(1/2*(xl+ xh))
+            x = Olver(n, x0)
+            
+            l0, l0n = Legendre_0(n, x)
+            l1 = Legendre_1(n, x, l0)
+            w = 2/((1-x**2)*l1**2)
+            
+            G[k-1, 0] = x
+            G[k-1, 1] = w
+            
+            G[n-k, 0] = -x
+            G[n-k, 1] = w
 
     
     return G
@@ -129,7 +160,7 @@ def Return_Quadrature(XMLFILE,n):
         
     
 if __name__ == "__main__":
-    print(Return_Quadrature("functions/f6.xml", 100))
+    print(Return_Quadrature("functions/f3.xml", 19))
 
 
     
