@@ -1,6 +1,7 @@
 ################################################################################
 import numpy as np
 import splipy as spl
+import scipy as sp
 ################################################################################
 import time
 
@@ -35,7 +36,7 @@ def Prepare_Data(T,p):
     
     return basis, I, W, X, n
 
-def Assembly(basis,I,W,X,n):
+def Assembly(basis, I, W, X, n, dense = True):
     """update F and Jacobian every time in the Newton iteration.
     """
     
@@ -50,19 +51,21 @@ def Assembly(basis,I,W,X,n):
     
     #Dense solver
     #------------
-    dFde = dN*np.diag(W)
-    J = np.concatenate((N, dFde), axis=1) #dN*diag(sparse(W))
+    if dense:
+        dFde = dN*np.diag(W)
+        J = np.concatenate((N, dFde), axis=1) #dN*diag(sparse(W))
     
     #Sparse solver
     #------------
-#    dFde = dN*sp.sparse.diags(W)
-#    J = np.concatenate((N, dFde), axis=1) #dN*diag(sparse(W))
-#    J = sp.sparse.csr_matrix(J)    
+    else:
+        dFde = dN*sp.sparse.diags(W)
+        J = np.concatenate((N, dFde), axis=1) #dN*diag(sparse(W))
+        J = sp.sparse.csr_matrix(J)    
 
     return J, F
 
 
-def Spline_Quadrature(T, p):
+def Spline_Quadrature(T, p, dense = True):
     """Newton iteration"""
     
     #Tolerance
@@ -79,13 +82,16 @@ def Spline_Quadrature(T, p):
     
     while norm>TOL and itcount < 20:
 
-        J, F = Assembly(basis,I,W,X,n)
-        
-        #Sparse solver
-#        delta = sp.sparse.linalg.spsolve(J, F)
+        J, F = Assembly(basis,I ,W ,X ,n , dense)
 
         #Dense solver        
-        delta = np.linalg.solve(J, F)
+        if dense:
+            delta = np.linalg.solve(J, F)
+        
+        #Sparse solver
+        else:
+            delta = sp.sparse.linalg.spsolve(J, F)
+
         
         W -= delta[:int(n/2)]
         X -= delta[int(n/2):]
@@ -108,7 +114,7 @@ def Spline_Quadrature(T, p):
     return W, X, itcount
 
 
-def testRunningTime():
+def testRunningTime(dense = True):
     
     t1 = np.array([0, 0, 0, 1, 2, 3, 4, 4, 4])
     t2 = np.array([0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4])
@@ -118,10 +124,10 @@ def testRunningTime():
     
     t = time.clock()
     for _ in range(100):
-        Spline_Quadrature(t1, 2)
-        Spline_Quadrature(t2, 2)
-        Spline_Quadrature(t3, 3)
-        Spline_Quadrature(t4, 3)
+        Spline_Quadrature(t1, 2, dense)
+        Spline_Quadrature(t2, 2, dense)
+        Spline_Quadrature(t3, 3, dense)
+        Spline_Quadrature(t4, 3, dense)
     print("Time spent: {}".format(int((time.clock() - t)*1000)), "ms.", sep="")
     
 testRunningTime()
