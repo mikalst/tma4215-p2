@@ -114,13 +114,12 @@ def Spline_Quadrature(T, p, dense = True):
     return W, X, itcount
 
 
-def testRunningTime(dense = True):
+def test_Running_Time(dense = True):
     
     t1 = np.array([0, 0, 0, 1, 2, 3, 4, 4, 4])
     t2 = np.array([0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4])
     t3 = np.array([0, 0, 0, 0, 1, 2, 3, 4, 4, 4, 4])
     t4 = np.array([0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 4])
-#    t5 = np.array([0, 0, 0, 0, 0, 1, 1, 1, 
     
     t = time.clock()
     for _ in range(100):
@@ -130,4 +129,5 @@ def testRunningTime(dense = True):
         Spline_Quadrature(t4, 3, dense)
     print("Time spent: {}".format(int((time.clock() - t)*1000)), "ms.", sep="")
     
-testRunningTime()
+if __name__ == "__main__":
+    test_Running_Time()
