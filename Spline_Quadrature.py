@@ -1,8 +1,6 @@
 ################################################################################
 import numpy as np
-import scipy as sp
 import splipy as spl
-import sys
 ################################################################################
 import time
 
@@ -11,15 +9,20 @@ def Prepare_Data(T,p):
     """Prepare_Data, create the initial condition and augment the knot
     vector.
     """
+    
+    #Create basis
     basis = spl.BSplineBasis(p+1, knots=T)
     
-    #number of weights of knots
-    n = len(basis)-p-1
+    #As in the paper, 2*n = len(T) - p - 1, for ease of coding written here 
+    #just as n. See below if (len(T) - p - 1) is odd. 
+    n = len(T)-p-1
     
-    #augmenting knot vector
+    #If n is odd, augment knot vector
     if n%2==1:
-        t = (basis.knots[p]+basis.knots[p+1])/2
-        basis.insert_knot(t) #(τp+1 + τp+2)/2 between τp+1 and τp+2
+
+        t = (T[p]+T[p+1])/2
+        basis.insert_knot(t)
+
         n+=1
         
     #constant integral vector in F.
@@ -27,29 +30,36 @@ def Prepare_Data(T,p):
     
     #create initial condition
     G = np.array(basis.greville())
-    X = np.array(G[1::2]+G[::2])/2
+    X = (G[1::2]+G[::2])/2
     W = I[1::2]+I[::2]
     
     return basis, I, W, X, n
 
 def Assembly(basis,I,W,X,n):
-    """update F and dF every time in the Newton iteration.
+    """update F and Jacobian every time in the Newton iteration.
     """
+    
     N = basis.evaluate(X).T
     dN = basis.evaluate(X, d=1).T
 
     F = np.zeros(n)
     F[:] = np.dot(N, W) - I
     
+    #I have here not utilized the band structure of J
+    #Doing this might improve running time.
     
-    dFde = dN*sp.sparse.diags(W)
-    
+    #Dense solver
+    #------------
+    dFde = dN*np.diag(W)
     J = np.concatenate((N, dFde), axis=1) #dN*diag(sparse(W))
-        
-    #Uncomment if we want sparse
+    
+    #Sparse solver
+    #------------
+#    dFde = dN*sp.sparse.diags(W)
+#    J = np.concatenate((N, dFde), axis=1) #dN*diag(sparse(W))
 #    J = sp.sparse.csr_matrix(J)    
 
-    return F, J
+    return J, F
 
 
 def Spline_Quadrature(T, p):
@@ -60,20 +70,20 @@ def Spline_Quadrature(T, p):
 
     #Prepare_data
     basis, I, W, X, n = Prepare_Data(T, p)
+
     #print('Starting at: \n W: ', W, '\n X: ', X)
-    
-    #Assembly
-    F, J = Assembly(basis, I, W, X, n)
-    
+        
     #Initialize improvement to inf and iteration count to 0
     norm = float('inf')
     itcount = 0
     
     while norm>TOL and itcount < 20:
 
-        F, J = Assembly(basis,I,W,X,n)
+        J, F = Assembly(basis,I,W,X,n)
+        
         #Sparse solver
 #        delta = sp.sparse.linalg.spsolve(J, F)
+
         #Dense solver        
         delta = np.linalg.solve(J, F)
         
@@ -98,14 +108,20 @@ def Spline_Quadrature(T, p):
     return W, X, itcount
 
 
-t1 = np.array([0, 0, 0, 1, 2, 3, 4, 4, 4])
-t2 = np.array([0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4])
-t3 = np.array([0, 0, 0, 0, 1, 2, 3, 4, 4, 4, 4])
-t4 = np.array([0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 4])
-
-t = time.clock()
-Spline_Quadrature(t1, 2)
-Spline_Quadrature(t2, 2)
-Spline_Quadrature(t3, 3)
-Spline_Quadrature(t4, 3)
-print("Time spent: {}".format(int((time.clock() - t)*1000)), "ms.", sep="")
+def testRunningTime():
+    
+    t1 = np.array([0, 0, 0, 1, 2, 3, 4, 4, 4])
+    t2 = np.array([0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4])
+    t3 = np.array([0, 0, 0, 0, 1, 2, 3, 4, 4, 4, 4])
+    t4 = np.array([0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 4])
+#    t5 = np.array([0, 0, 0, 0, 0, 1, 1, 1, 
+    
+    t = time.clock()
+    for _ in range(100):
+        Spline_Quadrature(t1, 2)
+        Spline_Quadrature(t2, 2)
+        Spline_Quadrature(t3, 3)
+        Spline_Quadrature(t4, 3)
+    print("Time spent: {}".format(int((time.clock() - t)*1000)), "ms.", sep="")
+    
+testRunningTime()
