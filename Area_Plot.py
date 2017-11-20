@@ -17,12 +17,15 @@ def Area_Plot():
         u = np.linspace(surface.start('u'), surface.end('u'), N)
         v = np.linspace(surface.start('v'), surface.end('v'), N)
         X = surface(u, v)
-        #Why did we have to find the syntax for this ourselves???????? Jesus Freaking Kennedy
-        #Source:
-        #https://github.com/sintefmath/Splipy/blob/d2b6dea5055e5c8435b729969aceb0bf170024b2/doc/Tutorial/Factory%20methods.ipynb
+        
+        plt.figure()
         plt.plot(X[:,:,0], X[:,:,1], '-', color="red")
-        plt.plot(X[:,:,0], X[:,:,1].T, '-', color="blue")
+#        plt.plot(X[:,:,0], X[:,:,1].T, '-', color="blue")
+                
+        plt.gcf().subplots_adjust(bottom=0.18)
+        plt.xticks(rotation=45)
         plt.axis('equal')
+        plt.savefig("Area_Plot.pdf")
         plt.show()
         
         
