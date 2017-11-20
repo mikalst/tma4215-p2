@@ -7,9 +7,6 @@ import numpy as np
 
 
 def Curve_Integral(path):
-    
-
-
     with G2(path) as file:
         #Make a splipy curve object from file
         curve = file.read()[0]
@@ -21,9 +18,15 @@ def Curve_Integral(path):
         #Calculate optimal quadrature points and weights
         W, X, itcount = SPQ.Spline_Quadrature(Tau, p, False)
         
-        #Avoid using a for loop at all costs during the evaluation of the 
-        # trajectory quadrature, as (unless using numba) this will be far slower
-        # than using the c-implemented procedures of numpy. 
+        
+        path = 0
+        for i, x in enumerate(X):
+            
+            dd = curve.derivative(x)
+            
+            path += W[i]*np.linalg.norm(dd)
+        
+        print("For-loop:", path)
         
         #curve.derivative(X) evaluates the derivative in the points X. As this
         # returns a (n*2) array in the format of n*(dx/dt, dy/dt) we use 
@@ -31,6 +34,7 @@ def Curve_Integral(path):
         # ds = sqrt((dx/dt)**2 + (dy/dt)**2). We then dot the weights with the
         # ds-vector. 
         path = np.dot(W, np.linalg.norm(curve.derivative(X), axis = 1))
+
 
         return path
 
@@ -44,7 +48,7 @@ def main(*args, **kwargs):
     else:    
         path = args[0]
     
-    print(Curve_Integral(path))
+    print("Numpy.dot:", Curve_Integral(path))
     
     
     
