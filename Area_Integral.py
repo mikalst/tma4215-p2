@@ -1,15 +1,9 @@
 ################################################################################
 import sys
 import numpy as np
-import scipy as sp
-
 import Spline_Quadrature as SPQ
 from splipy.io import G2
-import splipy as spl
 ################################################################################
-
-
-
 
 
 def Area_Integral(path):
@@ -18,47 +12,25 @@ def Area_Integral(path):
         
         TauX = surface.knots(0, True)
         TauY = surface.knots(1, True)
-
+        
         px = surface.order(0) - 1
-        px = surface.order(1) - 1
+        py = surface.order(1) - 1
         
         Wx, Xx, itCountx = SPQ.Spline_Quadrature(TauX, px, False)
-        Wy, Xy, itCounty = SPQ.Spline_Quadrature(TauY, px, False)
+        Wy, Xy, itCounty = SPQ.Spline_Quadrature(TauY, py, False)
                 
         area = 0
-        
-        for i, x in enumerate(Xx):
-            for j, y in enumerate(Xy):
-                dd = np.linalg.norm(surface.derivative(x, y))
-                print("dd = ", dd)
-                area += dd*Wx[i]*Wy[j]
-                #print(area)
-                
-        print(area)
-        
-#        
-#        dy = surface.derivative(Xy)
-#        
-#        #print(dx)
-#        print(dy)
-#        
-#        J = np.cross(surface.derivative(Xx), surface.derivative(Xy))
-#        
-#        print(J.shape, J)
-#        
-#        print(W.shape, W)
-#        
-#        path = np.dot(W, np.cross(surface.derivative(Xx), surface.derivative(Xy)))
-#        
-#        print(path)
-        
-        
-        
-        
-#        print(Tau, p, boundaries, sep="\n")
-#        
+        for i in range(len(Wx)):
+            for j in range(len(Wy)):
 
-        return
+                Dx = surface.derivative(Xx[i], Xy[j], d = (1,0))
+                Dy = surface.derivative(Xx[i], Xy[j], d = (0,1))
+                
+                J = np.abs(np.cross(Dx, Dy))
+                
+                area += Wx[i] * Wy[j] * J
+
+        return area
 
     
 
