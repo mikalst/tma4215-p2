@@ -42,24 +42,25 @@ def Assembly(basis, I, W, X, n, dense = True):
     
     N = basis.evaluate(X).T
     dN = basis.evaluate(X, d=1).T
-
+    
     F = np.zeros(n)
     F[:] = np.dot(N, W) - I
     
-    #I have here not utilized the band structure of J
-    #Doing this might improve running time.
+    #Reduce bandwidth
+    indices_0 = list(range(0, n, 2))
+    indices_1 = list(range(1, n, 2))
+
+    dFde = dN*np.diag(W)
+    dFdw = N
     
-    #Dense solver
-    #------------
-    if dense:
-        dFde = dN*np.diag(W)
-        J = np.concatenate((N, dFde), axis=1) #dN*diag(sparse(W))
-    
+    J = np.empty((n, n))
+    J[:, indices_0] = dFdw
+    J[:, indices_1] = dFde
+        
     #Sparse solver
     #------------
-    else:
-        dFde = dN*sp.sparse.diags(W)
-        J = np.concatenate((N, dFde), axis=1) #dN*diag(sparse(W))
+    if not dense:
+        
         J = sp.sparse.csr_matrix(J)    
 
     return J, F
@@ -82,7 +83,7 @@ def Spline_Quadrature(T, p, dense = True):
     
     while norm>TOL and itcount < 20:
 
-        J, F = Assembly(basis,I ,W ,X ,n , dense)
+        J, F = Assembly(basis, I, W, X, n, dense)
 
         #Dense solver        
         if dense:
@@ -93,8 +94,8 @@ def Spline_Quadrature(T, p, dense = True):
             delta = sp.sparse.linalg.spsolve(J, F)
 
         
-        W -= delta[:int(n/2)]
-        X -= delta[int(n/2):]
+        W -= delta[::2]
+        X -= delta[1::2]
 
         norm = np.linalg.norm(delta)
 
@@ -114,7 +115,7 @@ def Spline_Quadrature(T, p, dense = True):
     return W, X, itcount
 
 
-def test_Running_Time(dense = True):
+def test_Running_Time(dense=True):
     
     t1 = np.array([0, 0, 0, 1, 2, 3, 4, 4, 4])
     t2 = np.array([0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4])
@@ -130,4 +131,7 @@ def test_Running_Time(dense = True):
     print("Time spent: {}".format(int((time.clock() - t)*1000)), "ms.", sep="")
     
 if __name__ == "__main__":
-    test_Running_Time()
+#    print(Spline_Quadrature(np.array([0, 0, 0, 1, 2, 3, 4, 4, 4]), 2, True))
+#    print(Spline_Quadrature(np.array([0, 0, 0, 1, 2, 3, 4, 4, 4]), 2, False))
+    test_Running_Time(True)
+    test_Running_Time(False)
