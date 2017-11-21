@@ -18,15 +18,13 @@ def Curve_Integral(path):
         #Calculate optimal quadrature points and weights
         W, X, itcount = SPQ.Spline_Quadrature(Tau, p, False)
         
+#        #This is equivalent of the one-liner on line 33, but line 33 is much
+#        #faster and so we have used the latter 
+#        path = 0
+#        for i, x in enumerate(X):
+#            dd = curve.derivative(x)
+#            path += W[i]*np.linalg.norm(dd)
         
-        path = 0
-        for i, x in enumerate(X):
-            
-            dd = curve.derivative(x)
-            
-            path += W[i]*np.linalg.norm(dd)
-        
-        print("For-loop:", path)
         
         #curve.derivative(X) evaluates the derivative in the points X. As this
         # returns a (n*2) array in the format of n*(dx/dt, dy/dt) we use 
